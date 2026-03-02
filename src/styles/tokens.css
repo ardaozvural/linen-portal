@@ -1,0 +1,447 @@
+/* ============================================================
+   Linen Design Tokens
+   Import AFTER globals.css / tailwindcss.
+   All tokens are plain CSS custom properties so they work in
+   both Tailwind utility classes (via @theme) and raw CSS.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. Brand Palette — raw swatches (oklch)
+      linen-* mirrors the brand's warm-neutral identity.
+      pine-*  mirrors the accent forest green.
+      sand-*  is a warm secondary.
+   ------------------------------------------------------------ */
+:root {
+  /* Linen neutrals */
+  --linen-50:  oklch(0.985 0.006 75);
+  --linen-100: oklch(0.965 0.012 75);
+  --linen-200: oklch(0.930 0.022 75);
+  --linen-300: oklch(0.875 0.034 75);
+  --linen-400: oklch(0.800 0.045 75);
+  --linen-500: oklch(0.715 0.052 75);
+  --linen-600: oklch(0.600 0.048 75);
+  --linen-700: oklch(0.480 0.040 75);
+  --linen-800: oklch(0.355 0.028 75);
+  --linen-900: oklch(0.240 0.018 75);
+  --linen-950: oklch(0.155 0.012 75);
+
+  /* Pine green accent */
+  --pine-50:   oklch(0.975 0.020 155);
+  --pine-100:  oklch(0.935 0.040 155);
+  --pine-200:  oklch(0.870 0.075 155);
+  --pine-300:  oklch(0.780 0.110 155);
+  --pine-400:  oklch(0.680 0.135 155);
+  --pine-500:  oklch(0.565 0.145 155);
+  --pine-600:  oklch(0.460 0.130 155);
+  --pine-700:  oklch(0.365 0.105 155);
+  --pine-800:  oklch(0.275 0.078 155);
+  --pine-900:  oklch(0.195 0.052 155);
+  --pine-950:  oklch(0.130 0.030 155);
+
+  /* Sand warm secondary */
+  --sand-50:   oklch(0.988 0.008 88);
+  --sand-100:  oklch(0.968 0.016 88);
+  --sand-200:  oklch(0.935 0.030 88);
+  --sand-300:  oklch(0.885 0.048 88);
+  --sand-400:  oklch(0.820 0.065 88);
+  --sand-500:  oklch(0.740 0.078 88);
+  --sand-600:  oklch(0.635 0.072 88);
+  --sand-700:  oklch(0.510 0.060 88);
+  --sand-800:  oklch(0.385 0.045 88);
+  --sand-900:  oklch(0.270 0.030 88);
+  --sand-950:  oklch(0.175 0.018 88);
+
+  /* Semantic brand aliases */
+  --color-brand:             var(--pine-600);
+  --color-brand-hover:       var(--pine-700);
+  --color-brand-active:      var(--pine-800);
+  --color-brand-subtle:      var(--pine-100);
+  --color-brand-foreground:  oklch(1 0 0);
+
+  --color-surface:           var(--linen-50);
+  --color-surface-raised:    oklch(1 0 0);
+  --color-surface-sunken:    var(--linen-100);
+  --color-surface-overlay:   oklch(1 0 0 / 92%);
+
+  --color-neutral:           var(--linen-400);
+  --color-neutral-subtle:    var(--linen-100);
+  --color-neutral-emphasis:  var(--linen-700);
+
+  --color-success:           oklch(0.530 0.140 150);
+  --color-success-subtle:    oklch(0.950 0.040 150);
+  --color-warning:           oklch(0.680 0.155 60);
+  --color-warning-subtle:    oklch(0.960 0.040 60);
+  --color-error:             oklch(0.560 0.220 25);
+  --color-error-subtle:      oklch(0.960 0.045 25);
+  --color-info:              oklch(0.540 0.165 245);
+  --color-info-subtle:       oklch(0.950 0.040 245);
+}
+
+.dark {
+  --color-brand:             var(--pine-400);
+  --color-brand-hover:       var(--pine-300);
+  --color-brand-active:      var(--pine-200);
+  --color-brand-subtle:      var(--pine-900);
+  --color-brand-foreground:  oklch(0.10 0 0);
+
+  --color-surface:           oklch(0.145 0.018 264);
+  --color-surface-raised:    oklch(0.200 0.025 264);
+  --color-surface-sunken:    oklch(0.110 0.012 264);
+  --color-surface-overlay:   oklch(0.16 0.020 264 / 92%);
+
+  --color-neutral:           var(--linen-600);
+  --color-neutral-subtle:    oklch(0.260 0.022 264);
+  --color-neutral-emphasis:  var(--linen-300);
+
+  --color-success:           oklch(0.640 0.150 150);
+  --color-success-subtle:    oklch(0.220 0.055 150);
+  --color-warning:           oklch(0.760 0.150 60);
+  --color-warning-subtle:    oklch(0.230 0.055 60);
+  --color-error:             oklch(0.670 0.200 25);
+  --color-error-subtle:      oklch(0.230 0.055 25);
+  --color-info:              oklch(0.620 0.160 245);
+  --color-info-subtle:       oklch(0.225 0.055 245);
+}
+
+/* ------------------------------------------------------------
+   2. Typography
+   ------------------------------------------------------------ */
+:root {
+  /* Font families */
+  --font-display:  'Playfair Display', Georgia, serif;
+  --font-body:     'Inter', system-ui, sans-serif;
+  --font-mono:     'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Font-size scale (fluid-friendly rem values) */
+  --text-2xs:  0.625rem;   /* 10px */
+  --text-xs:   0.75rem;    /* 12px */
+  --text-sm:   0.875rem;   /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-md:   1.125rem;   /* 18px */
+  --text-lg:   1.25rem;    /* 20px */
+  --text-xl:   1.5rem;     /* 24px */
+  --text-2xl:  1.875rem;   /* 30px */
+  --text-3xl:  2.25rem;    /* 36px */
+  --text-4xl:  3rem;       /* 48px */
+  --text-5xl:  3.75rem;    /* 60px */
+  --text-6xl:  4.5rem;     /* 72px */
+
+  /* Line-height */
+  --leading-none:    1;
+  --leading-tight:   1.25;
+  --leading-snug:    1.375;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose:   2;
+
+  /* Letter-spacing */
+  --tracking-tightest: -0.05em;
+  --tracking-tighter:  -0.025em;
+  --tracking-tight:    -0.01em;
+  --tracking-normal:   0em;
+  --tracking-wide:     0.025em;
+  --tracking-wider:    0.05em;
+  --tracking-widest:   0.1em;
+
+  /* Font-weight */
+  --weight-light:     300;
+  --weight-regular:   400;
+  --weight-medium:    500;
+  --weight-semibold:  600;
+  --weight-bold:      700;
+  --weight-extrabold: 800;
+  --weight-black:     900;
+}
+
+/* ------------------------------------------------------------
+   3. Spacing scale
+      Aligned with Tailwind default (4px base unit).
+   ------------------------------------------------------------ */
+:root {
+  --space-px:   1px;
+  --space-0:    0px;
+  --space-0-5:  0.125rem;   /* 2px  */
+  --space-1:    0.25rem;    /* 4px  */
+  --space-1-5:  0.375rem;   /* 6px  */
+  --space-2:    0.5rem;     /* 8px  */
+  --space-2-5:  0.625rem;   /* 10px */
+  --space-3:    0.75rem;    /* 12px */
+  --space-3-5:  0.875rem;   /* 14px */
+  --space-4:    1rem;       /* 16px */
+  --space-5:    1.25rem;    /* 20px */
+  --space-6:    1.5rem;     /* 24px */
+  --space-7:    1.75rem;    /* 28px */
+  --space-8:    2rem;       /* 32px */
+  --space-9:    2.25rem;    /* 36px */
+  --space-10:   2.5rem;     /* 40px */
+  --space-11:   2.75rem;    /* 44px */
+  --space-12:   3rem;       /* 48px */
+  --space-14:   3.5rem;     /* 56px */
+  --space-16:   4rem;       /* 64px */
+  --space-20:   5rem;       /* 80px */
+  --space-24:   6rem;       /* 96px */
+  --space-28:   7rem;       /* 112px */
+  --space-32:   8rem;       /* 128px */
+  --space-36:   9rem;       /* 144px */
+  --space-40:   10rem;      /* 160px */
+  --space-48:   12rem;      /* 192px */
+  --space-56:   14rem;      /* 224px */
+  --space-64:   16rem;      /* 256px */
+  --space-72:   18rem;      /* 288px */
+  --space-80:   20rem;      /* 320px */
+  --space-96:   24rem;      /* 384px */
+}
+
+/* ------------------------------------------------------------
+   4. Border radius
+   ------------------------------------------------------------ */
+:root {
+  --radius-none:    0px;
+  --radius-xs:      0.125rem;   /* 2px  */
+  --radius-sm:      0.25rem;    /* 4px  */
+  --radius-md:      0.375rem;   /* 6px  */
+  --radius-base:    0.5rem;     /* 8px  */
+  --radius-lg:      0.75rem;    /* 12px */
+  --radius-xl:      1rem;       /* 16px */
+  --radius-2xl:     1.25rem;    /* 20px */
+  --radius-3xl:     1.5rem;     /* 24px */
+  --radius-full:    9999px;
+}
+
+/* ------------------------------------------------------------
+   5. Shadows
+   ------------------------------------------------------------ */
+:root {
+  --shadow-xs:    0 1px 2px oklch(0 0 0 / 0.06);
+  --shadow-sm:    0 1px 3px oklch(0 0 0 / 0.10), 0 1px 2px oklch(0 0 0 / 0.06);
+  --shadow-md:    0 4px 6px oklch(0 0 0 / 0.08), 0 2px 4px oklch(0 0 0 / 0.05);
+  --shadow-lg:    0 10px 15px oklch(0 0 0 / 0.10), 0 4px 6px oklch(0 0 0 / 0.05);
+  --shadow-xl:    0 20px 25px oklch(0 0 0 / 0.12), 0 8px 10px oklch(0 0 0 / 0.06);
+  --shadow-2xl:   0 25px 50px oklch(0 0 0 / 0.20);
+  --shadow-inner: inset 0 2px 4px oklch(0 0 0 / 0.06);
+  --shadow-none:  0 0 oklch(0 0 0 / 0);
+
+  /* Brand-tinted elevation */
+  --shadow-brand-sm: 0 2px 8px oklch(0.460 0.130 155 / 0.20);
+  --shadow-brand-md: 0 4px 16px oklch(0.460 0.130 155 / 0.25);
+  --shadow-brand-lg: 0 8px 32px oklch(0.460 0.130 155 / 0.30);
+}
+
+.dark {
+  --shadow-xs:    0 1px 2px oklch(0 0 0 / 0.25);
+  --shadow-sm:    0 1px 3px oklch(0 0 0 / 0.35), 0 1px 2px oklch(0 0 0 / 0.20);
+  --shadow-md:    0 4px 6px oklch(0 0 0 / 0.30), 0 2px 4px oklch(0 0 0 / 0.20);
+  --shadow-lg:    0 10px 15px oklch(0 0 0 / 0.35), 0 4px 6px oklch(0 0 0 / 0.20);
+  --shadow-xl:    0 20px 25px oklch(0 0 0 / 0.40), 0 8px 10px oklch(0 0 0 / 0.25);
+  --shadow-2xl:   0 25px 50px oklch(0 0 0 / 0.55);
+  --shadow-inner: inset 0 2px 4px oklch(0 0 0 / 0.25);
+}
+
+/* ------------------------------------------------------------
+   6. Transitions & Easing
+   ------------------------------------------------------------ */
+:root {
+  /* Durations */
+  --duration-instant:  0ms;
+  --duration-fast:     100ms;
+  --duration-normal:   200ms;
+  --duration-slow:     300ms;
+  --duration-slower:   500ms;
+  --duration-slowest:  700ms;
+
+  /* Easing curves */
+  --ease-linear:       linear;
+  --ease-in:           cubic-bezier(0.4, 0, 1, 1);
+  --ease-out:          cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out:       cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring:       cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-bounce:       cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth:       cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* Shorthand transition presets */
+  --transition-base:    var(--duration-normal) var(--ease-in-out);
+  --transition-colors:  color var(--duration-normal) var(--ease-in-out),
+                        background-color var(--duration-normal) var(--ease-in-out),
+                        border-color var(--duration-normal) var(--ease-in-out),
+                        text-decoration-color var(--duration-normal) var(--ease-in-out),
+                        fill var(--duration-normal) var(--ease-in-out),
+                        stroke var(--duration-normal) var(--ease-in-out);
+  --transition-opacity: opacity var(--duration-normal) var(--ease-in-out);
+  --transition-shadow:  box-shadow var(--duration-normal) var(--ease-in-out);
+  --transition-transform: transform var(--duration-normal) var(--ease-out);
+  --transition-all:     all var(--duration-normal) var(--ease-in-out);
+}
+
+/* ------------------------------------------------------------
+   7. Z-index scale
+   ------------------------------------------------------------ */
+:root {
+  --z-hide:     -1;
+  --z-base:      0;
+  --z-raised:    10;
+  --z-dropdown:  200;
+  --z-sticky:    300;
+  --z-overlay:   400;
+  --z-modal:     500;
+  --z-popover:   600;
+  --z-toast:     700;
+  --z-tooltip:   800;
+  --z-top:       9999;
+}
+
+/* ------------------------------------------------------------
+   8. Layout
+   ------------------------------------------------------------ */
+:root {
+  /* Content widths */
+  --width-xs:   20rem;    /* 320px  */
+  --width-sm:   24rem;    /* 384px  */
+  --width-md:   28rem;    /* 448px  */
+  --width-lg:   32rem;    /* 512px  */
+  --width-xl:   36rem;    /* 576px  */
+  --width-2xl:  42rem;    /* 672px  */
+  --width-3xl:  48rem;    /* 768px  */
+  --width-4xl:  56rem;    /* 896px  */
+  --width-5xl:  64rem;    /* 1024px */
+  --width-6xl:  72rem;    /* 1152px */
+  --width-7xl:  80rem;    /* 1280px */
+  --width-prose: 65ch;
+
+  /* App shell dimensions */
+  --sidebar-width:           16rem;    /* 256px */
+  --sidebar-width-collapsed: 4rem;     /* 64px  */
+  --header-height:           3.5rem;   /* 56px  */
+  --panel-min-width:         20rem;    /* 320px */
+
+  /* Breakpoints (for JS / container queries reference) */
+  --bp-sm:  640px;
+  --bp-md:  768px;
+  --bp-lg:  1024px;
+  --bp-xl:  1280px;
+  --bp-2xl: 1536px;
+}
+
+/* ------------------------------------------------------------
+   9. Opacity scale
+   ------------------------------------------------------------ */
+:root {
+  --opacity-0:    0;
+  --opacity-5:    0.05;
+  --opacity-10:   0.10;
+  --opacity-20:   0.20;
+  --opacity-30:   0.30;
+  --opacity-40:   0.40;
+  --opacity-50:   0.50;
+  --opacity-60:   0.60;
+  --opacity-70:   0.70;
+  --opacity-75:   0.75;
+  --opacity-80:   0.80;
+  --opacity-90:   0.90;
+  --opacity-95:   0.95;
+  --opacity-100:  1;
+}
+
+/* ------------------------------------------------------------
+   10. Focus ring
+   ------------------------------------------------------------ */
+:root {
+  --focus-ring-width:  2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color:  var(--color-brand);
+}
+
+/* ------------------------------------------------------------
+   11. Tailwind @theme bridge
+       Exposes custom tokens as tw utility classes.
+   ------------------------------------------------------------ */
+@theme inline {
+  /* Brand colors */
+  --color-brand:            var(--color-brand);
+  --color-brand-hover:      var(--color-brand-hover);
+  --color-brand-active:     var(--color-brand-active);
+  --color-brand-subtle:     var(--color-brand-subtle);
+  --color-brand-foreground: var(--color-brand-foreground);
+
+  /* Surface */
+  --color-surface:          var(--color-surface);
+  --color-surface-raised:   var(--color-surface-raised);
+  --color-surface-sunken:   var(--color-surface-sunken);
+  --color-surface-overlay:  var(--color-surface-overlay);
+
+  /* Semantic status */
+  --color-success:          var(--color-success);
+  --color-success-subtle:   var(--color-success-subtle);
+  --color-warning:          var(--color-warning);
+  --color-warning-subtle:   var(--color-warning-subtle);
+  --color-error:            var(--color-error);
+  --color-error-subtle:     var(--color-error-subtle);
+  --color-info:             var(--color-info);
+  --color-info-subtle:      var(--color-info-subtle);
+
+  /* Raw Linen palette (access via bg-linen-500 etc.) */
+  --color-linen-50:  var(--linen-50);
+  --color-linen-100: var(--linen-100);
+  --color-linen-200: var(--linen-200);
+  --color-linen-300: var(--linen-300);
+  --color-linen-400: var(--linen-400);
+  --color-linen-500: var(--linen-500);
+  --color-linen-600: var(--linen-600);
+  --color-linen-700: var(--linen-700);
+  --color-linen-800: var(--linen-800);
+  --color-linen-900: var(--linen-900);
+  --color-linen-950: var(--linen-950);
+
+  /* Raw Pine palette */
+  --color-pine-50:   var(--pine-50);
+  --color-pine-100:  var(--pine-100);
+  --color-pine-200:  var(--pine-200);
+  --color-pine-300:  var(--pine-300);
+  --color-pine-400:  var(--pine-400);
+  --color-pine-500:  var(--pine-500);
+  --color-pine-600:  var(--pine-600);
+  --color-pine-700:  var(--pine-700);
+  --color-pine-800:  var(--pine-800);
+  --color-pine-900:  var(--pine-900);
+  --color-pine-950:  var(--pine-950);
+
+  /* Raw Sand palette */
+  --color-sand-50:   var(--sand-50);
+  --color-sand-100:  var(--sand-100);
+  --color-sand-200:  var(--sand-200);
+  --color-sand-300:  var(--sand-300);
+  --color-sand-400:  var(--sand-400);
+  --color-sand-500:  var(--sand-500);
+  --color-sand-600:  var(--sand-600);
+  --color-sand-700:  var(--sand-700);
+  --color-sand-800:  var(--sand-800);
+  --color-sand-900:  var(--sand-900);
+  --color-sand-950:  var(--sand-950);
+
+  /* Shadows */
+  --shadow-xs:        var(--shadow-xs);
+  --shadow-sm:        var(--shadow-sm);
+  --shadow-md:        var(--shadow-md);
+  --shadow-lg:        var(--shadow-lg);
+  --shadow-xl:        var(--shadow-xl);
+  --shadow-2xl:       var(--shadow-2xl);
+  --shadow-inner:     var(--shadow-inner);
+  --shadow-brand-sm:  var(--shadow-brand-sm);
+  --shadow-brand-md:  var(--shadow-brand-md);
+  --shadow-brand-lg:  var(--shadow-brand-lg);
+
+  /* Layout */
+  --width-sidebar:   var(--sidebar-width);
+  --height-header:   var(--header-height);
+}
+:root {
+  --accent: #C05B2F !important;
+  --accent-foreground: #ffffff !important;
+
+  --background: #F8F6F2 !important;
+  --foreground: #18150F !important;
+
+  --card: #ffffff !important;
+  --card-foreground: #18150F !important;
+
+  --border: #E6E1DB !important;
+}
