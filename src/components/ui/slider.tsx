@@ -39,20 +39,20 @@ function Slider({
       <SliderPrimitive.Track
         data-slot="slider-track"
         className={cn(
-          // FIX: token yerine portal CSS var'ları
-          "relative grow overflow-hidden rounded-full",
-          "data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full",
-          "data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5",
-          "bg-[var(--border)]"
+          "relative grow overflow-hidden rounded-full cursor-pointer",
+          "data-[orientation=horizontal]:h-2 data-[orientation=horizontal]:w-full",
+          "data-[orientation=vertical]:h-full data-[orientation=vertical]:w-2",
+          /* Use explicit CSS vars so track is always visible in every theme */
+          "bg-[var(--slider-track,var(--border,#E6E1DB))]"
         )}
       >
         <SliderPrimitive.Range
           data-slot="slider-range"
           className={cn(
-            // FIX: token yerine accent
             "absolute",
             "data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full",
-            "bg-[var(--accent)]"
+            /* Accent-coloured filled range */
+            "bg-[var(--slider-range,var(--accent,#C05B2F))]"
           )}
         />
       </SliderPrimitive.Track>
@@ -62,11 +62,14 @@ function Slider({
           data-slot="slider-thumb"
           key={index}
           className={cn(
-            // FIX: thumb rengi de tema ile uyumlu
-            "block size-4 shrink-0 rounded-full border shadow-sm",
-            "border-[var(--border)] bg-[var(--card)]",
-            "ring-[color:var(--accent)]/30 transition-[box-shadow]",
-            "hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden",
+            /* Larger thumb: 20px → friendlier touch target */
+            "block size-5 shrink-0 rounded-full border-2 shadow-md cursor-pointer",
+            "border-[var(--slider-thumb-border,var(--border,#E6E1DB))]",
+            "bg-[var(--slider-thumb,var(--card,#fff))]",
+            "ring-[var(--slider-thumb-ring,var(--accent,#C05B2F))]/30",
+            "transition-[box-shadow,transform]",
+            "hover:ring-4 hover:scale-110",
+            "focus-visible:ring-4 focus-visible:outline-hidden",
             "disabled:pointer-events-none disabled:opacity-50"
           )}
         />
