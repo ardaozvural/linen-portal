@@ -12,7 +12,7 @@ export default async function ProjectPage({
   const { data: project, error: pErr } = await supabase
     .from("projects")
     .select("id, slug")
-    .eq("slug", projectSlug)
+    .eq("id", projectSlug)
     .single()
 
   if (pErr || !project) {
@@ -31,5 +31,5 @@ export default async function ProjectPage({
   if (!latest) redirect("/dashboard")
 
   // direkt batch review'a git
-  redirect(`/projects/${project.slug}/batches/${latest.id}`)
+     redirect(`/projects/${project.slug}/batches/${latest.id}`)
 }

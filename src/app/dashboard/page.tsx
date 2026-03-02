@@ -36,7 +36,7 @@ export default async function Dashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {(projects ?? []).map((p) => (
-          <Link key={p.id} href={`/projects/${p.slug}`}>
+          <Link key={p.id} href={`/projects/${p.id}`}>
             <Card className="shadow-sm hover:shadow-md transition border border-[#E5E1DC] bg-white">
               <CardContent className="p-6 space-y-5">
                 {/* Clean cover block (not an empty white box) */}
