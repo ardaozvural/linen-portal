@@ -113,7 +113,7 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
 
     try {
       // action imzan: (id, status, note)
-      await updateImageStatus(selected.id, statusToSave as any, noteToSave as any)
+      await updateImageStatus(selected.id, statusToSave as any)
     } catch {
       setSelected(prev)
       setLocalStatus(normalizeStatus(prev.status))
