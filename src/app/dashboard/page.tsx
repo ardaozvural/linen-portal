@@ -36,10 +36,13 @@ export default async function Dashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {(projects ?? []).map((p) => (
-          <Link key={p.id} href={`/projects/${p.id}`}>
-            <Card className="shadow-sm hover:shadow-md transition border border-[#E5E1DC] bg-white">
+          <Link
+            key={p.id}
+            href={`/projects/${p.id}`}
+            className="block"
+          >
+            <Card className="shadow-sm hover:shadow-md transition border border-[#E5E1DC] bg-white cursor-pointer">
               <CardContent className="p-6 space-y-5">
-                {/* Clean cover block (not an empty white box) */}
                 <div className="rounded-sm border border-[#E5E1DC] bg-[#F7F5F2] p-6">
                   <div className="text-xs text-[#8A8480]">PROJECT</div>
                   <div className="mt-1 text-lg font-medium text-[#1C1A18]">
@@ -48,7 +51,9 @@ export default async function Dashboard() {
                 </div>
 
                 <div className="space-y-1">
-                  <div className="text-sm text-[#1C1A18]">{p.client_name}</div>
+                  <div className="text-sm text-[#1C1A18]">
+                    {p.client_name}
+                  </div>
                   <div className="text-xs text-[#8A8480]">Open →</div>
                 </div>
               </CardContent>

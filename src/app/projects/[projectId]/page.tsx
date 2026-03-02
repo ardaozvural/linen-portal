@@ -1,35 +1,27 @@
 import { redirect } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
-export default async function ProjectPage({
-  params,
-}: {
-  params: { projectId: string }
-}) {
-  const projectSlug = params.projectId
+type Params = { projectId: string }
 
-  // project'i bul
+export default async function ProjectPage(props: { params: Params | Promise<Params> }) {
+  const { projectId } = await Promise.resolve(props.params)
+
   const { data: project, error: pErr } = await supabase
     .from("projects")
-    .select("id, slug")
-    .eq("id", projectSlug)
+    .select("id")
+    .eq("id", projectId)
     .single()
 
-  if (pErr || !project) {
-    redirect("/dashboard")
-  }
+  if (pErr || !project) redirect("/dashboard")
 
-  // en güncel batch'i bul
-  const { data: batches } = await supabase
+  const { data: batches, error: bErr } = await supabase
     .from("batches")
     .select("id")
     .eq("project_id", project.id)
     .order("created_at", { ascending: false })
     .limit(1)
 
-  const latest = batches?.[0]
-  if (!latest) redirect("/dashboard")
+  if (bErr || !batches || batches.length === 0) redirect("/dashboard")
 
-  // direkt batch review'a git
-     redirect(`/projects/${project.slug}/batches/${latest.id}`)
+  redirect(`/projects/${projectId}/batches/${batches[0].id}`)
 }
