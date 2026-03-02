@@ -1,0 +1,79 @@
+"use client"
+
+import { useState } from "react"
+import { Dialog } from "@/components/ui/dialog"
+import { Slider } from "@/components/ui/slider"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+
+export default function Gallery({ images }: { images: any[] }) {
+  const [selected, setSelected] = useState<any | null>(null)
+  const [sliderVal, setSliderVal] = useState(50)
+
+  return (
+    <>
+      {/* GRID */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {images.map((img) => (
+          <div
+            key={img.id}
+            className="relative cursor-pointer group"
+            onClick={() => setSelected(img)}
+          >
+            <img
+              src={img.after_url}
+              className="w-full h-60 object-cover rounded-sm border border-[#E5E1DC]"
+            />
+
+            {/* STATUS BADGE */}
+            <div className="absolute top-2 left-2 text-xs px-2 py-1 bg-white border border-[#E5E1DC]">
+              {img.status}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* MODAL */}
+      {selected && (
+        <Dialog open={true} onOpenChange={() => setSelected(null)}>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-12">
+            <div className="bg-white p-8 w-[900px] space-y-6">
+              <div className="relative h-[500px] border border-[#E5E1DC] overflow-hidden">
+                <img
+                  src={selected.after_url}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <img
+                  src={selected.before_url}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ clipPath: `inset(0 ${100 - sliderVal}% 0 0)` }}
+                />
+              </div>
+
+              <Slider
+                value={[sliderVal]}
+                onValueChange={(v) => setSliderVal(v[0])}
+                max={100}
+                step={1}
+              />
+
+              <RadioGroup defaultValue={selected.status}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="approve" id="approve" />
+                  <Label htmlFor="approve">Approve</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="revise" id="revise" />
+                  <Label htmlFor="revise">Request revision</Label>
+                </div>
+              </RadioGroup>
+
+              <Textarea placeholder="Add note..." />
+            </div>
+          </div>
+        </Dialog>
+      )}
+    </>
+  )
+}
