@@ -219,13 +219,13 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
       {/* MODAL */}
       {selected && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px] p-4 md:p-10"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px] p-2 sm:p-4 md:p-10"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setSelected(null)
           }}
         >
-          <div className="mx-auto h-full max-w-6xl">
-            <div className="relative h-full rounded-md bg-[var(--card)] shadow-2xl overflow-hidden border border-[var(--border)]">
+          <div className="mx-auto h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] max-w-6xl">
+            <div className="relative h-full rounded-md bg-[var(--card)] shadow-2xl overflow-y-auto border border-[var(--border)]">
               {/* header */}
               <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
                 <div className="text-sm text-[color:var(--color-text-secondary,#635B52)]">
@@ -245,7 +245,7 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                 <div className="p-4">
                   <div
                     className={[
-                      "relative w-full h-[70vh] rounded-md border bg-[var(--background)] overflow-hidden",
+                      "relative w-full h-[45vh] sm:h-[55vh] lg:h-[70vh] rounded-md border bg-[var(--background)] overflow-hidden",
                       selectedStyle.border,
                     ].join(" ")}
                   >
