@@ -12,7 +12,7 @@ export default async function Dashboard() {
   if (error) {
     return (
       <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] p-8 sm:p-12 lg:p-16">
-        <h1 className="text-4xl font-serif mb-6">Your Projects</h1>
+        <h1 className="text-4xl font-serif mb-6">AI-Powered Visual Optimization</h1>
         <p className="text-sm text-[color:var(--color-text-tertiary,#9C9189)]">
           Supabase error: {error.message}
         </p>
@@ -26,9 +26,9 @@ export default async function Dashboard() {
     <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] p-8 sm:p-12 lg:p-16">
       <div className="flex items-end justify-between mb-10">
         <div>
-          <h1 className="text-4xl font-serif">Your Projects</h1>
+          <h1 className="text-4xl font-serif">AI-Powered Visual Optimization</h1>
           <p className="mt-2 text-sm text-[color:var(--color-text-tertiary,#9C9189)]">
-            Private client deliveries.
+            Product & Model Integrity Preserved Studio Enhancement
           </p>
         </div>
 

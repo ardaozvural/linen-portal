@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { updateImageStatus } from "./actions"
+import { useRouter } from "next/navigation"
 
 type ImageRow = {
   id: string
@@ -74,11 +75,14 @@ function statusStyles(status: string) {
 }
 
 export default function Gallery({ images }: { images: ImageRow[] }) {
+  const router = useRouter()
+
   const [selected, setSelected] = useState<ImageRow | null>(null)
   const [sliderVal, setSliderVal] = useState(50)
 
   const [localStatus, setLocalStatus] = useState<string>("pending")
   const [localNote, setLocalNote] = useState<string>("")
+  const [isSaving, setIsSaving] = useState(false)
 
   const selectedStyle = useMemo(
     () => statusStyles(selected?.status ?? "pending"),
@@ -100,21 +104,38 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
     return () => window.removeEventListener("keydown", onKey)
   }, [])
 
-  async function saveStatus(nextStatus: string, nextNote?: string) {
+  async function saveStatus(nextStatus: string, nextNote?: string, opts?: { closeAfter?: boolean }) {
     if (!selected) return
+    if (isSaving) return
 
     const statusToSave = normalizeStatus(nextStatus)
     const noteToSave = typeof nextNote === "string" ? nextNote : localNote
 
-    // optimistic UI
     const prev = selected
+
+    // optimistic
     setSelected({ ...selected, status: statusToSave, client_note: noteToSave })
     setLocalStatus(statusToSave)
 
     try {
-      // action imzan: (id, status, note)
+      setIsSaving(true)
+
+      // action imzan şu an 2 arg: (id, status)
       await updateImageStatus(selected.id, statusToSave as any)
+
+      router.refresh()
+
+      const shouldClose = opts?.closeAfter ?? false
+      if (shouldClose) {
+        window.setTimeout(() => {
+          setIsSaving(false)
+          setSelected(null)
+        }, 400)
+      } else {
+        setIsSaving(false)
+      }
     } catch {
+      setIsSaving(false)
       setSelected(prev)
       setLocalStatus(normalizeStatus(prev.status))
       setLocalNote(prev.client_note ?? "")
@@ -156,7 +177,7 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                 s.border,
               ].join(" ")}
             >
-              {/* Thumbnail: SADECE AFTER (hover split yok) */}
+              {/* Thumbnail: SADECE AFTER */}
               <div className="relative aspect-[3/4] w-full bg-[var(--background)]">
                 <img
                   src={img.after_url}
@@ -269,7 +290,7 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
 
                     <RadioGroup
                       value={localStatus}
-                      onValueChange={(value) => saveStatus(value)}
+                      onValueChange={(value) => saveStatus(value, localNote)}
                       className="mt-3 space-y-3"
                     >
                       <div className="flex items-center space-x-2">
@@ -307,14 +328,16 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
 
                   <div className="pt-2">
                     <Button
-                      className="w-full"
+                      disabled={isSaving}
+                      className="w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                       style={{
-                        background: "var(--accent)",
+                        background: isSaving ? "var(--border)" : "var(--accent)",
                         color: "var(--accent-foreground)",
+                        opacity: isSaving ? 0.8 : 1,
                       }}
-                      onClick={() => saveStatus(localStatus, localNote)}
+                      onClick={() => saveStatus(localStatus, localNote, { closeAfter: true })}
                     >
-                      Save
+                      {isSaving ? "Saving..." : "Save"}
                     </Button>
 
                     <div className="mt-3 text-[11px] text-[color:var(--color-text-tertiary,#9C9189)]">

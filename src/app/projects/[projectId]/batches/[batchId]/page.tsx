@@ -19,6 +19,9 @@ export default async function BatchPage({
     .order("created_at", { ascending: true })
 
   const count = images?.length ?? 0
+  const pendingCount = (images ?? []).filter((i: any) => (i.status ?? "pending") === "pending").length
+  const approvedCount = (images ?? []).filter((i: any) => i.status === "approved").length
+  const revisionCount = (images ?? []).filter((i: any) => i.status === "revision").length
 
   return (
     <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
@@ -71,7 +74,42 @@ export default async function BatchPage({
             </div>
           ) : null}
         </div>
+                  {/* Status summary */}
+        {count > 0 && (
+          <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="rounded-md border border-[var(--border)] bg-[var(--card)] px-4 py-3">
+              <div className="text-xs text-[color:var(--color-text-tertiary,#9C9189)]">Pending</div>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-400" />
+                <span className="text-lg font-medium">{pendingCount}</span>
+              </div>
+            </div>
 
+            <div className="rounded-md border border-[var(--border)] bg-[var(--card)] px-4 py-3">
+              <div className="text-xs text-[color:var(--color-text-tertiary,#9C9189)]">Approved</div>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                <span className="text-lg font-medium">{approvedCount}</span>
+              </div>
+            </div>
+
+            <div className="rounded-md border border-[var(--border)] bg-[var(--card)] px-4 py-3">
+              <div className="text-xs text-[color:var(--color-text-tertiary,#9C9189)]">Revision</div>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-orange-500" />
+                <span className="text-lg font-medium">{revisionCount}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {count === 0 ? (
+          <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-6">
+            ...
+          </div>
+        ) : (
+          <Gallery images={images || []} />
+        )}
         {count === 0 ? (
           <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-6">
             <div className="text-sm text-[color:var(--color-text-secondary,#635B52)]">
