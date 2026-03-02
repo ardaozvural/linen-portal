@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
@@ -10,7 +11,9 @@ export default function Home() {
           <p className="text-sm text-muted-foreground">
             Your work, reviewed.
           </p>
-          <Button className="w-full">Open Dashboard</Button>
+	<Link href="/dashboard">
+	  <Button className="w-full sm:w-auto">Open dashboard</Button>
+	</Link>
         </CardContent>
       </Card>
     </main>

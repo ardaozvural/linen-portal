@@ -55,14 +55,18 @@ async function run() {
     const beforeUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/before/${beforeKey}`
     const afterUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/after/${afterKey}`
 
-    const { error: dbErr } = await supabase.from("images").insert({
+const { error: dbErr } = await supabase
+  .from("images")
+  .upsert(
+    {
       batch_id: BATCH_ID,
       filename: base,
       before_url: beforeUrl,
       after_url: afterUrl,
       status: "pending",
-    })
-
+    },
+    { onConflict: "batch_id,filename" }
+  )
     if (dbErr) {
       console.log("DB insert error:", dbErr.message)
       continue
