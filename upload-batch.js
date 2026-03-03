@@ -1,5 +1,16 @@
 import dotenv from "dotenv"
 dotenv.config({ path: ".env.local" })
+
+// --- SAFETY GUARDS (auto-added) ---
+if (!process.env.BATCH_ID || !String(process.env.BATCH_ID).match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)) {
+  console.error("❌ BATCH_ID (uuid) required. Copy batch URL and set BATCH_ID.");
+  process.exit(1);
+}
+if (!process.env.BEFORE_DIR || !process.env.AFTER_DIR) {
+  console.error("❌ BEFORE_DIR and AFTER_DIR required.");
+  process.exit(1);
+}
+// --- /SAFETY GUARDS ---
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
