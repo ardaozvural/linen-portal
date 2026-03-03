@@ -90,19 +90,8 @@ function Spinner({ className = "" }: { className?: string }) {
       fill="none"
       viewBox="0 0 24 24"
     >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-      />
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
   )
 }
@@ -117,10 +106,7 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
   const [localNote, setLocalNote] = useState<string>("")
   const [isSaving, setIsSaving] = useState(false)
 
-  const selectedStyle = useMemo(
-    () => statusStyles(selected?.status ?? "pending"),
-    [selected?.status]
-  )
+  const selectedStyle = useMemo(() => statusStyles(selected?.status ?? "pending"), [selected?.status])
 
   useEffect(() => {
     if (!selected) return
@@ -191,9 +177,7 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
   if (!images || images.length === 0) {
     return (
       <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-6">
-        <div className="text-sm text-[color:var(--color-text-secondary,#635B52)]">
-          No images in this batch yet.
-        </div>
+        <div className="text-sm text-[color:var(--color-text-secondary,#635B52)]">No images in this batch yet.</div>
         <div className="mt-1 text-xs text-[color:var(--color-text-tertiary,#9C9189)]">
           Upload images for this batch, then refresh.
         </div>
@@ -219,7 +203,6 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                 "rounded-md border bg-[var(--card)]",
                 "shadow-sm hover:shadow-md transition",
                 "overflow-hidden",
-                /* min tap height for cards */
                 "min-h-[44px]",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2",
                 s.border,
@@ -255,10 +238,7 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
 
               {/* meta */}
               <div className="px-3 py-3">
-                <div
-                  className="text-[11px] font-mono text-[color:var(--color-text-tertiary,#9C9189)] truncate"
-                  title={fname}
-                >
+                <div className="text-[11px] font-mono text-[color:var(--color-text-tertiary,#9C9189)] truncate" title={fname}>
                   {fname}
                 </div>
               </div>
@@ -275,26 +255,11 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
             if (e.target === e.currentTarget) setSelected(null)
           }}
         >
-          {/*
-            Outer: full screen, flex-col, gives modal a max-width on desktop.
-            Uses 100dvh so address bar doesn't truncate on mobile.
-          */}
           <div className="flex flex-col h-[100dvh] w-full max-w-6xl mx-auto p-2 sm:p-4 md:p-10">
-            {/*
-              Modal card: flex-col so sticky header works.
-              overflow-hidden on this — each inner section self-scrolls.
-            */}
             <div className="relative flex flex-col flex-1 min-h-0 rounded-md bg-[var(--card)] shadow-2xl border border-[var(--border)] overflow-hidden">
-
               {/* ── Sticky modal header ─────────────────────────────────── */}
               <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--card)] px-4 py-3 shrink-0">
-                {/* filename — truncated with tooltip */}
-                <div
-                  className={[
-                    "flex items-center gap-2 min-w-0 flex-1",
-                  ].join(" ")}
-                >
-                  {/* status dot */}
+                <div className="flex items-center gap-2 min-w-0 flex-1">
                   <span
                     className="shrink-0 size-2 rounded-full"
                     style={{ background: selectedStyle.dot }}
@@ -306,7 +271,6 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                   >
                     {prettyFilename(selected)}
                   </span>
-                  {/* status chip — always visible in header */}
                   <span
                     className={[
                       "hidden sm:inline-flex shrink-0 text-xs font-semibold px-2 py-0.5 rounded-sm border",
@@ -319,7 +283,6 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                   </span>
                 </div>
 
-                {/* Close — always reachable, min 44px tap target */}
                 <Button
                   variant="outline"
                   className="shrink-0 border-[var(--border)] min-h-[44px] min-w-[44px] px-4"
@@ -330,33 +293,24 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                 </Button>
               </div>
 
-              {/*
-                ── Body: flex-col on mobile, flex-row on lg.
-                   Each half is independently scrollable.
-              */}
               <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
-
                 {/* ── Left: compare + slider ─────────────────────────── */}
-                <div className="flex flex-col flex-1 min-h-0 p-4">
-                  {/*
-                    Compare area: use aspect-ratio rather than vh units so it
-                    behaves correctly inside a scrollable flex child.
-                  */}
+                <div className="flex flex-col flex-1 min-h-0 p-2 sm:p-4">
                   <div
                     className={[
-                      "relative w-full flex-1 min-h-0 rounded-md border bg-[var(--background)] overflow-hidden",
-                      "aspect-[3/4] sm:aspect-[4/3] lg:aspect-[3/4]",
+                      // ✅ mobile: make compare area BIG + readable
+                      "relative w-full flex-1 min-h-[55dvh] sm:min-h-0 rounded-md border bg-[var(--background)] overflow-hidden",
+                      // keep aspect hints for larger breakpoints if you want (optional)
+                      "sm:aspect-[4/3] lg:aspect-[3/4]",
                       selectedStyle.border,
                     ].join(" ")}
                   >
-                    {/* AFTER (base layer) */}
                     <img
                       src={selected.after_url}
                       className="absolute inset-0 w-full h-full object-contain"
                       alt="After"
                       draggable={false}
                     />
-                    {/* BEFORE (clipped by slider) — clipPath logic unchanged */}
                     <img
                       src={selected.before_url}
                       className="absolute inset-0 w-full h-full object-contain"
@@ -365,7 +319,6 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                       draggable={false}
                     />
 
-                    {/* Labels */}
                     <div className="absolute top-3 left-3 text-[10px] px-2 py-1 rounded-sm border border-[var(--border)] bg-[var(--card)] text-[color:var(--color-text-tertiary,#9C9189)]">
                       BEFORE
                     </div>
@@ -373,7 +326,6 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                       AFTER
                     </div>
 
-                    {/* Live slider divider line */}
                     <div
                       aria-hidden="true"
                       className="pointer-events-none absolute inset-y-0 w-[2px] bg-white/70 shadow"
@@ -381,8 +333,7 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                     />
                   </div>
 
-                  {/* Slider — below compare area, good touch target */}
-                  <div className="mt-4 px-1">
+                  <div className="mt-4 px-1 shrink-0">
                     <Slider
                       value={[sliderVal]}
                       onValueChange={(v) => setSliderVal(v[0] ?? 50)}
@@ -400,13 +351,13 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                 {/* ── Right: controls ────────────────────────────────── */}
                 <div
                   className={[
-                    "overflow-y-auto",
+                    // ✅ mobile: limit panel height so compare stays large
+                    "overflow-y-auto max-h-[32dvh] lg:max-h-none",
                     "lg:w-[300px] xl:w-[320px] shrink-0",
                     "border-t lg:border-t-0 lg:border-l border-[var(--border)]",
                     "bg-[var(--card)] p-4 lg:p-5 space-y-5",
                   ].join(" ")}
                 >
-                  {/* STATUS */}
                   <div>
                     <div className="text-xs font-semibold tracking-[0.14em] text-[color:var(--color-text-tertiary,#9C9189)]">
                       STATUS
@@ -417,7 +368,6 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                       onValueChange={(value) => saveStatus(value, localNote)}
                       className="mt-3 space-y-1"
                     >
-                      {/* Each row ≥ 44px via min-h */}
                       {(
                         [
                           { value: "pending", id: "r-pending", label: "Pending" },
@@ -448,11 +398,7 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                               {label}
                             </Label>
                             {isActive && (
-                              <span
-                                className="size-2 rounded-full shrink-0"
-                                style={{ background: s.dot }}
-                                aria-hidden="true"
-                              />
+                              <span className="size-2 rounded-full shrink-0" style={{ background: s.dot }} aria-hidden="true" />
                             )}
                           </div>
                         )
@@ -460,7 +406,6 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                     </RadioGroup>
                   </div>
 
-                  {/* NOTE */}
                   <div>
                     <div className="text-xs font-semibold tracking-[0.14em] text-[color:var(--color-text-tertiary,#9C9189)]">
                       NOTE
@@ -477,11 +422,15 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                     />
                     <div className="mt-1.5 flex justify-between text-[11px] text-[color:var(--color-text-tertiary,#9C9189)]">
                       <span>{localNote.length}/500</span>
-                      {isSaving && <span className="flex items-center gap-1"><Spinner className="size-3" />Saving…</span>}
+                      {isSaving && (
+                        <span className="flex items-center gap-1">
+                          <Spinner className="size-3" />
+                          Saving…
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  {/* SAVE */}
                   <div className="pt-1">
                     <Button
                       disabled={isSaving}
@@ -503,7 +452,6 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
                       )}
                     </Button>
 
-                    {/* Esc hint — hidden on touch devices where it's irrelevant */}
                     <div className="mt-2.5 hidden sm:block text-[11px] text-[color:var(--color-text-tertiary,#9C9189)]">
                       Tip: Esc closes modal.
                     </div>
