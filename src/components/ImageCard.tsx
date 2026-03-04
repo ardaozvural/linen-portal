@@ -24,11 +24,9 @@ function statusLabel(s?: ReviewStatus | null) {
 }
 
 function statusClasses(s?: ReviewStatus | null) {
-  if (s === "approved")
-    return "border-[var(--color-approved)] text-[var(--color-approved)] bg-[var(--color-approved-light)]"
-  if (s === "revision")
-    return "border-[var(--color-revision)] text-[var(--color-revision)] bg-[var(--color-revision-light)]"
-  return "border-[var(--color-border)] text-[var(--color-text-secondary)] bg-white"
+  if (s === "approved") return "bg-green-100 text-green-700 border-green-200"
+  if (s === "revision") return "bg-orange-100 text-orange-700 border-orange-200"
+  return "bg-muted text-muted-foreground border-border"
 }
 
 function prettifyFilename(raw?: string | null) {
@@ -64,17 +62,15 @@ export function ImageCard({
       type="button"
       onClick={() => onOpen?.(image.id)}
       className={cn(
-        "group relative w-full text-left",
-        "rounded-[var(--radius-md)] border bg-[var(--color-surface)]",
-        "border-[var(--color-border)] shadow-[var(--shadow-card)]",
+        "group relative w-full text-left rounded-md border border-border bg-card shadow-sm",
         "transition-[transform,box-shadow,border-color] duration-150 ease-out",
-        "hover:shadow-[var(--shadow-hover)] hover:scale-[1.01]",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2",
+        "hover:shadow-md hover:scale-[1.01]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className
       )}
     >
-      <div className="relative overflow-hidden rounded-[var(--radius-md)]">
-        <div className="relative w-full aspect-[3/4] bg-[var(--color-surface-raised)]">
+      <div className="relative overflow-hidden rounded-md">
+        <div className="relative w-full aspect-[3/4] bg-background">
           {afterSrc ? (
             <Image
               src={afterSrc}
@@ -85,7 +81,7 @@ export function ImageCard({
               priority={false}
             />
           ) : (
-            <div className="absolute inset-0 grid place-items-center text-sm text-[var(--color-text-tertiary)]">
+            <div className="absolute inset-0 grid place-items-center text-sm text-muted-foreground">
               No image
             </div>
           )}
@@ -97,17 +93,14 @@ export function ImageCard({
                 "opacity-0 group-hover:opacity-100 transition-opacity duration-150"
               )}
             >
-              <div
-                className="absolute inset-y-0 left-0 w-[30%] overflow-hidden"
-                style={{ borderRight: "1px solid rgba(24,21,15,0.12)" }}
-              >
+              <div className="absolute inset-y-0 left-0 w-[30%] overflow-hidden border-r border-border">
                 <Image src={beforeSrc} alt="Before" fill className="object-cover" sizes="25vw" />
-                <div className="absolute left-3 top-3 rounded-[var(--radius-sm)] bg-white/85 px-2 py-1 text-[11px] font-medium tracking-[0.08em] uppercase text-[var(--color-text-secondary)]">
+                <div className="absolute left-3 top-3 rounded-sm bg-card/85 px-2 py-1 text-[11px] font-medium tracking-[0.08em] uppercase text-muted-foreground">
                   Before
                 </div>
               </div>
 
-              <div className="absolute right-3 top-3 rounded-[var(--radius-sm)] bg-white/85 px-2 py-1 text-[11px] font-medium tracking-[0.08em] uppercase text-[var(--color-text-secondary)]">
+              <div className="absolute right-3 top-3 rounded-sm bg-card/85 px-2 py-1 text-[11px] font-medium tracking-[0.08em] uppercase text-muted-foreground">
                 After
               </div>
             </div>
@@ -116,7 +109,7 @@ export function ImageCard({
           <div className="absolute left-3 top-3">
             <span
               className={cn(
-                "inline-flex items-center gap-2 rounded-[var(--radius-sm)] border px-2 py-1 text-xs font-medium",
+                "inline-flex items-center gap-2 rounded-sm border px-2 py-1 text-xs font-medium",
                 statusClasses(image.status ?? "pending")
               )}
             >
@@ -126,15 +119,11 @@ export function ImageCard({
         </div>
       </div>
 
-      <div className="px-4 py-3 border-t border-[var(--color-border)]">
-        <div className="font-mono text-[11px] text-[var(--color-text-tertiary)] truncate">
-          {filename}
-        </div>
+      <div className="px-4 py-3 border-t border-border">
+        <div className="font-mono text-[11px] text-muted-foreground truncate">{filename}</div>
 
         {!!image.note && (
-          <div className="mt-1 text-xs italic text-[var(--color-text-secondary)] truncate">
-            “{image.note}”
-          </div>
+          <div className="mt-1 text-xs italic text-muted-foreground truncate">“{image.note}”</div>
         )}
       </div>
     </button>

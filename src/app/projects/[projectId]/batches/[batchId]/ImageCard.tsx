@@ -17,14 +17,10 @@ export default function ImageCard({
   const [sliderVal, setSliderVal] = useState(50)
 
   return (
-    <Card className="shadow-sm border border-[#E5E1DC] bg-white">
+    <Card className="shadow-sm border border-border bg-card">
       <CardContent className="p-6 space-y-6">
-        <div className="relative h-96 border border-[#E5E1DC] rounded-sm overflow-hidden">
-          <img
-            src={after}
-            className="absolute inset-0 w-full h-full object-cover"
-            alt="After"
-          />
+        <div className="relative h-96 border border-border rounded-sm overflow-hidden bg-background">
+          <img src={after} className="absolute inset-0 w-full h-full object-cover" alt="After" />
           <img
             src={before}
             className="absolute inset-0 w-full h-full object-cover"
@@ -33,12 +29,7 @@ export default function ImageCard({
           />
         </div>
 
-        <Slider
-          value={[sliderVal]}
-          onValueChange={(v) => setSliderVal(v[0])}
-          max={100}
-          step={1}
-        />
+        <Slider value={[sliderVal]} onValueChange={(v) => setSliderVal(v[0])} max={100} step={1} />
 
         <RadioGroup defaultValue="pending" className="space-y-2">
           <div className="flex items-center space-x-2">

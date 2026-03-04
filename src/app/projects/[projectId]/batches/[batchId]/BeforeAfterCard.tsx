@@ -11,9 +11,9 @@ export function BeforeAfterCard() {
   const [sliderVal, setSliderVal] = useState(50)
 
   return (
-    <Card className="shadow-sm border border-[#E5E1DC] bg-white">
+    <Card className="shadow-sm border border-border bg-card">
       <CardContent className="p-6 space-y-6">
-        <div className="relative h-80 border border-[#E5E1DC] rounded-sm overflow-hidden">
+        <div className="relative h-80 border border-border rounded-sm overflow-hidden bg-background">
           <img
             src="https://placehold.co/800x1000?text=After"
             className="absolute inset-0 w-full h-full object-cover"
@@ -27,12 +27,7 @@ export function BeforeAfterCard() {
           />
         </div>
 
-        <Slider
-          value={[sliderVal]}
-          onValueChange={(v) => setSliderVal(v[0])}
-          max={100}
-          step={1}
-        />
+        <Slider value={[sliderVal]} onValueChange={(v) => setSliderVal(v[0])} max={100} step={1} />
 
         <RadioGroup defaultValue="approve" className="space-y-2">
           <div className="flex items-center space-x-2">

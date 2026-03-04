@@ -1,14 +1,28 @@
-// src/app/projects/[projectId]/batches/[batchId]/Gallery.tsx
 "use client"
 
+import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { Slider } from "@/components/ui/slider"
+import { usePathname, useRouter } from "next/navigation"
+import {
+  CheckCheck,
+  ChevronRight,
+  Download,
+  FolderKanban,
+  Home,
+  Images,
+  PanelLeft,
+  X,
+} from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
+import { BeforeAfterCompare } from "@/components/before-after-compare"
 import { updateImageStatus } from "./actions"
-import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
+import { cn } from "@/lib/utils"
 
 type ImageRow = {
   id: string
@@ -42,7 +56,7 @@ function prettyFilename(img: ImageRow) {
     const clean = url.split("?")[0]
     const base = clean.split("/").pop() || ""
     if (base) return base
-  } catch { }
+  } catch {}
 
   const ext = getExtFromUrl(url)
   return `image-${img.id.slice(0, 8)}${ext ? `.${ext}` : ""}`
@@ -52,35 +66,34 @@ function statusStyles(status: string) {
   switch (normalizeStatus(status)) {
     case "approved":
       return {
-        chipBg: "bg-[var(--color-approved-light,#E6F0EB)]",
-        chipText: "text-[var(--color-approved,#3A6651)]",
-        chipBorder: "border-[var(--color-approved,#3A6651)]",
-        border: "border-[var(--color-approved,#3A6651)]",
+        chipBg: "bg-green-100",
+        chipText: "text-green-700",
+        chipBorder: "border-green-200",
+        border: "border-green-200",
         label: "Approved",
-        dot: "#3A6651",
+        dotClass: "bg-green-600",
       }
     case "revision":
       return {
-        chipBg: "bg-[var(--color-revision-light,#F4EDDB)]",
-        chipText: "text-[var(--color-revision,#8A650E)]",
-        chipBorder: "border-[var(--color-revision,#8A650E)]",
-        border: "border-[var(--color-revision,#8A650E)]",
+        chipBg: "bg-orange-100",
+        chipText: "text-orange-700",
+        chipBorder: "border-orange-200",
+        border: "border-orange-200",
         label: "Revision",
-        dot: "#8A650E",
+        dotClass: "bg-orange-600",
       }
     default:
       return {
-        chipBg: "bg-[var(--card)]",
-        chipText: "text-[color:var(--color-text-secondary,#635B52)]",
-        chipBorder: "border-[var(--border)]",
-        border: "border-[var(--border)]",
+        chipBg: "bg-yellow-100",
+        chipText: "text-yellow-700",
+        chipBorder: "border-yellow-200",
+        border: "border-yellow-200",
         label: "Pending",
-        dot: "#9C9189",
+        dotClass: "bg-yellow-500",
       }
   }
 }
 
-// Spinner SVG — no extra dep
 function Spinner({ className = "" }: { className?: string }) {
   return (
     <svg
@@ -96,17 +109,99 @@ function Spinner({ className = "" }: { className?: string }) {
   )
 }
 
-export default function Gallery({ images }: { images: ImageRow[] }) {
+export default function Gallery({
+  projectId,
+  batchId,
+}: {
+  projectId: string
+  batchId: string
+}) {
   const router = useRouter()
+  const pathname = usePathname()
+
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [isMdUp, setIsMdUp] = useState(false)
 
   const [selected, setSelected] = useState<ImageRow | null>(null)
+  const [localImages, setLocalImages] = useState<ImageRow[]>([])
+  const [isLoadingImages, setIsLoadingImages] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [sliderVal, setSliderVal] = useState(50)
-
   const [localStatus, setLocalStatus] = useState<string>("pending")
   const [localNote, setLocalNote] = useState<string>("")
   const [isSaving, setIsSaving] = useState(false)
+  const [isApprovingAll, setIsApprovingAll] = useState(false)
+
+  const counts = useMemo(() => {
+    const pending = localImages.filter((i) => normalizeStatus(i.status) === "pending").length
+    const approved = localImages.filter((i) => normalizeStatus(i.status) === "approved").length
+    const revision = localImages.filter((i) => normalizeStatus(i.status) === "revision").length
+    return { pending, approved, revision }
+  }, [localImages])
+
+  const batchStatus = useMemo(() => {
+    if (counts.revision > 0) return statusStyles("revision")
+    if (localImages.length > 0 && counts.approved === localImages.length) return statusStyles("approved")
+    return statusStyles("pending")
+  }, [counts, localImages.length])
+
+  useEffect(() => {
+    let active = true
+
+    ;(async () => {
+      setIsLoadingImages(true)
+      setLoadError(null)
+
+      const { data: sessionData } = await supabase.auth.getSession()
+      if (!active) return
+      if (!sessionData.session) {
+        router.replace("/")
+        return
+      }
+
+      const { data, error } = await supabase
+        .from("images")
+        .select("*")
+        .eq("batch_id", batchId)
+        .order("created_at", { ascending: true })
+
+      if (!active) return
+
+      if (error) {
+        setLoadError(error.message)
+        setLocalImages([])
+        setSelected(null)
+        setIsLoadingImages(false)
+        return
+      }
+
+      const nextImages = (data || []) as ImageRow[]
+      setLocalImages(nextImages)
+      setSelected((prev) => {
+        if (!nextImages.length) return null
+        if (prev) {
+          const stillThere = nextImages.find((img) => img.id === prev.id)
+          if (stillThere) return stillThere
+        }
+        return nextImages[0]
+      })
+      setIsLoadingImages(false)
+    })()
+
+    return () => {
+      active = false
+    }
+  }, [batchId, router])
 
   const selectedStyle = useMemo(() => statusStyles(selected?.status ?? "pending"), [selected?.status])
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)")
+    const onChange = () => setIsMdUp(mq.matches)
+    onChange()
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
 
   useEffect(() => {
     if (!selected) return
@@ -115,354 +210,473 @@ export default function Gallery({ images }: { images: ImageRow[] }) {
     setLocalNote(selected.client_note ?? "")
   }, [selected])
 
-  // Lock body scroll when modal is open
   useEffect(() => {
-    if (selected) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = ""
-    }
-    return () => {
-      document.body.style.overflow = ""
-    }
-  }, [selected])
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setSelected(null)
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
   }, [])
 
-  // ── Business logic untouched ──────────────────────────────────────────────
-  async function saveStatus(nextStatus: string, nextNote?: string, opts?: { closeAfter?: boolean }) {
+  useEffect(() => {
     if (!selected) return
-    if (isSaving) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [selected])
+
+  async function saveStatus(nextStatus: string, nextNote?: string) {
+    if (!selected || isSaving) return
 
     const statusToSave = normalizeStatus(nextStatus)
     const noteToSave = typeof nextNote === "string" ? nextNote : localNote
-
+    const statusToPersist = statusToSave === "approved" || statusToSave === "revision" ? statusToSave : null
     const prev = selected
 
-    // optimistic
     setSelected({ ...selected, status: statusToSave, client_note: noteToSave })
+    setLocalImages((prevImages) =>
+      prevImages.map((img) =>
+        img.id === selected.id ? { ...img, status: statusToSave, client_note: noteToSave } : img
+      )
+    )
     setLocalStatus(statusToSave)
 
     try {
       setIsSaving(true)
-
-      await updateImageStatus(selected.id, statusToSave as any)
-
-      router.refresh()
-
-      const shouldClose = opts?.closeAfter ?? false
-      if (shouldClose) {
-        window.setTimeout(() => {
-          setIsSaving(false)
-          setSelected(null)
-        }, 400)
-      } else {
-        setIsSaving(false)
+      if (statusToPersist) {
+        const updated = await updateImageStatus(selected.id, statusToPersist, noteToSave)
+        if (updated) {
+          setLocalImages((prevImages) =>
+            prevImages.map((img) =>
+              img.id === updated.id
+                ? {
+                    ...img,
+                    status: updated.status ?? img.status,
+                    client_note:
+                      typeof updated.client_note === "string" ? updated.client_note : img.client_note,
+                  }
+                : img
+            )
+          )
+          setSelected((prevSelected) =>
+            prevSelected && prevSelected.id === updated.id
+              ? {
+                  ...prevSelected,
+                  status: updated.status ?? prevSelected.status,
+                  client_note:
+                    typeof updated.client_note === "string"
+                      ? updated.client_note
+                      : prevSelected.client_note,
+                }
+              : prevSelected
+          )
+        }
       }
     } catch {
-      setIsSaving(false)
       setSelected(prev)
+      setLocalImages((prevImages) =>
+        prevImages.map((img) =>
+          img.id === prev.id ? { ...img, status: prev.status, client_note: prev.client_note } : img
+        )
+      )
       setLocalStatus(normalizeStatus(prev.status))
       setLocalNote(prev.client_note ?? "")
+    } finally {
+      setIsSaving(false)
     }
   }
-  // ─────────────────────────────────────────────────────────────────────────
 
-  if (!images || images.length === 0) {
+  async function handleApproveAll() {
+    if (localImages.length === 0 || isApprovingAll) return
+    setIsApprovingAll(true)
+    try {
+      const updatedRows = await Promise.all(localImages.map((img) => updateImageStatus(img.id, "approved")))
+      const updatedMap = new Map(updatedRows.filter(Boolean).map((row) => [row.id, row]))
+      setLocalImages((prevImages) =>
+        prevImages.map((img) => {
+          const updated = updatedMap.get(img.id)
+          if (!updated) return img
+          return {
+            ...img,
+            status: updated.status ?? img.status,
+            client_note: typeof updated.client_note === "string" ? updated.client_note : img.client_note,
+          }
+        })
+      )
+      setSelected((prevSelected) => {
+        if (!prevSelected) return prevSelected
+        const updated = updatedMap.get(prevSelected.id)
+        if (!updated) return prevSelected
+        return {
+          ...prevSelected,
+          status: updated.status ?? prevSelected.status,
+          client_note:
+            typeof updated.client_note === "string" ? updated.client_note : prevSelected.client_note,
+        }
+      })
+    } finally {
+      setIsApprovingAll(false)
+    }
+  }
+
+  const navItems = [
+    {
+      href: "/dashboard",
+      label: "Pano",
+      icon: Home,
+      badge: null as number | null,
+    },
+    {
+      href: `/projects/${projectId}`,
+      label: "Proje",
+      icon: FolderKanban,
+      badge: null as number | null,
+    },
+    {
+      href: `/projects/${projectId}/batches/${batchId}`,
+      label: "Batch",
+      icon: Images,
+      badge: localImages.length,
+    },
+  ]
+
+  const DetailContent = ({ mobile = false }: { mobile?: boolean }) => {
+    if (!selected) return null
+
     return (
-      <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-6">
-        <div className="text-sm text-[color:var(--color-text-secondary,#635B52)]">No images in this batch yet.</div>
-        <div className="mt-1 text-xs text-[color:var(--color-text-tertiary,#9C9189)]">
-          Upload images for this batch, then refresh.
+      <div className={cn("grid gap-4", mobile ? "grid-cols-1" : "lg:grid-cols-3")}>
+        <div className={cn("space-y-4", mobile ? "" : "lg:col-span-2")}>
+          <div className={cn("w-full", !mobile && "mx-auto max-w-4xl")}>
+            <BeforeAfterCompare
+              beforeSrc={selected.before_url}
+              afterSrc={selected.after_url}
+              value={sliderVal}
+              onChange={setSliderVal}
+              imageClassName={selectedStyle.border}
+              aspectClassName={mobile ? "aspect-[4/3]" : "aspect-[16/10]"}
+            />
+          </div>
         </div>
+
+        <Card className="shadow-sm border-border overflow-hidden">
+          <div className="border-b border-border bg-card px-4 py-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={"size-2 rounded-full shrink-0 " + selectedStyle.dotClass} aria-hidden="true" />
+              <p className="text-sm font-medium truncate" title={prettyFilename(selected)}>
+                {prettyFilename(selected)}
+              </p>
+              <span
+                className={cn(
+                  "ml-auto inline-flex shrink-0 text-xs font-semibold px-2 py-0.5 rounded-sm border",
+                  selectedStyle.chipBg,
+                  selectedStyle.chipText,
+                  selectedStyle.chipBorder
+                )}
+              >
+                {selectedStyle.label}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 space-y-4 overflow-auto">
+            <div>
+              <div className="text-xs font-semibold tracking-[0.14em] text-muted-foreground">STATUS</div>
+              <RadioGroup
+                value={localStatus}
+                onValueChange={(value) => saveStatus(value, localNote)}
+                className="mt-3 space-y-1"
+              >
+                {(
+                  [
+                    { value: "pending", id: "r-pending", label: "Pending" },
+                    { value: "approved", id: "r-approved", label: "Onayla" },
+                    { value: "revision", id: "r-revision", label: "Revision needed" },
+                  ] as const
+                ).map(({ value, id, label }) => {
+                  const s = statusStyles(value)
+                  const isActive = localStatus === value
+                  return (
+                    <div
+                      key={value}
+                      className={cn(
+                        "flex items-center gap-3 min-h-[44px] px-3 rounded-md border transition-colors",
+                        isActive ? `${s.chipBg} ${s.chipBorder}` : "border-transparent hover:bg-background"
+                      )}
+                    >
+                      <RadioGroupItem value={value} id={id} />
+                      <Label
+                        htmlFor={id}
+                        className={cn("cursor-pointer font-medium text-sm select-none flex-1", isActive && s.chipText)}
+                      >
+                        {label}
+                      </Label>
+                      {isActive && <span className={"size-2 rounded-full shrink-0 " + s.dotClass} aria-hidden="true" />}
+                    </div>
+                  )
+                })}
+              </RadioGroup>
+            </div>
+
+            <div>
+              <div className="text-xs font-semibold tracking-[0.14em] text-muted-foreground">NOTE</div>
+              <Textarea
+                className="mt-3 resize-none"
+                placeholder="Describe what needs adjusting…"
+                value={localNote}
+                onChange={(e) => setLocalNote(e.target.value)}
+                onBlur={() => saveStatus(localStatus, localNote)}
+                maxLength={500}
+                rows={4}
+              />
+              <div className="mt-1.5 flex justify-between text-[11px] text-muted-foreground">
+                <span>{localNote.length}/500</span>
+                {isSaving && (
+                  <span className="flex items-center gap-1">
+                    <Spinner className="size-3" />
+                    Saving…
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <Button
+              disabled={isSaving}
+              className="w-full min-h-[44px] flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-primary text-primary-foreground disabled:bg-muted disabled:text-muted-foreground"
+              onClick={() => saveStatus(localStatus, localNote)}
+            >
+              {isSaving ? (
+                <>
+                  <Spinner className="size-4" />
+                  Saving…
+                </>
+              ) : (
+                "Değişiklikleri kaydet"
+              )}
+            </Button>
+          </div>
+        </Card>
       </div>
     )
   }
 
   return (
-    <>
-      {/* ── GRID ─────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {images.map((img) => {
-          const s = statusStyles(img.status || "pending")
-          const fname = prettyFilename(img)
-
-          return (
-            <button
-              key={img.id}
-              type="button"
-              onClick={() => setSelected(img)}
-              className={[
-                "group text-left",
-                "rounded-md border bg-[var(--card)]",
-                "shadow-sm hover:shadow-md transition",
-                "overflow-hidden",
-                "min-h-[44px]",
-                "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2",
-                s.border,
-              ].join(" ")}
-            >
-              {/* Thumbnail: AFTER only */}
-              <div className="relative aspect-[3/4] w-full bg-[var(--background)]">
-                <img
-                  src={img.after_url}
-                  alt={fname}
-                  className="absolute inset-0 w-full h-full object-contain"
-                  loading="lazy"
-                  draggable={false}
-                />
-
-                {/* status chip */}
-                <div
-                  className={[
-                    "absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-sm border",
-                    s.chipBg,
-                    s.chipText,
-                    s.chipBorder,
-                  ].join(" ")}
-                >
-                  {s.label}
-                </div>
-
-                {/* Compare hint */}
-                <div className="pointer-events-none absolute bottom-2 right-2 rounded-sm border border-[var(--border)] bg-[var(--card)] px-2 py-1 text-[10px] text-[color:var(--color-text-tertiary,#9C9189)] opacity-0 group-hover:opacity-100 transition">
-                  Compare →
-                </div>
-              </div>
-
-              {/* meta */}
-              <div className="px-3 py-3">
-                <div className="text-[11px] font-mono text-[color:var(--color-text-tertiary,#9C9189)] truncate" title={fname}>
-                  {fname}
-                </div>
-              </div>
-            </button>
-          )
-        })}
-      </div>
-
-      {/* ── MODAL ────────────────────────────────────────────────────────── */}
-      {selected && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px]"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setSelected(null)
-          }}
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="min-h-screen flex">
+        <aside
+          className={cn(
+            "hidden md:flex h-screen sticky top-0 border-r border-border bg-card flex-col transition-all duration-200",
+            sidebarCollapsed ? "w-20" : "w-64"
+          )}
         >
-          <div className="flex flex-col h-[100dvh] w-full max-w-6xl mx-auto p-2 sm:p-4 md:p-10">
-            <div className="relative flex flex-col flex-1 min-h-0 rounded-md bg-[var(--card)] shadow-2xl border border-[var(--border)] overflow-hidden">
-              {/* ── Sticky modal header ─────────────────────────────────── */}
-              <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--card)] px-4 py-3 shrink-0">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span
-                    className="shrink-0 size-2 rounded-full"
-                    style={{ background: selectedStyle.dot }}
-                    aria-hidden="true"
-                  />
-                  <span
-                    className="text-sm text-[color:var(--color-text-secondary,#635B52)] truncate"
-                    title={prettyFilename(selected)}
-                  >
-                    {prettyFilename(selected)}
-                  </span>
-                  <span
-                    className={[
-                      "hidden sm:inline-flex shrink-0 text-xs font-semibold px-2 py-0.5 rounded-sm border",
-                      selectedStyle.chipBg,
-                      selectedStyle.chipText,
-                      selectedStyle.chipBorder,
-                    ].join(" ")}
-                  >
-                    {selectedStyle.label}
-                  </span>
-                </div>
+          <div className="h-16 px-3 border-b border-border flex items-center justify-between">
+            <div className={cn("font-semibold tracking-wide", sidebarCollapsed && "hidden")}>Retouchio</div>
+            <Button variant="ghost" size="icon" onClick={() => setSidebarCollapsed((v) => !v)}>
+              <PanelLeft className="size-4" />
+            </Button>
+          </div>
 
-                <Button
-                  variant="outline"
-                  className="shrink-0 border-[var(--border)] min-h-[44px] min-w-[44px] px-4"
-                  onClick={() => setSelected(null)}
-                  aria-label="Close modal"
+          <nav className="p-3 space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm border transition-colors",
+                    isActive
+                      ? "bg-primary/10 border-primary/20 text-primary"
+                      : "border-transparent text-muted-foreground hover:bg-muted"
+                  )}
                 >
-                  Close
-                </Button>
-              </div>
-
-              <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
-                {/* ── Left: compare + slider ─────────────────────────── */}
-                <div className="flex flex-col flex-1 min-h-0 p-2 sm:p-4">
-                  <div
-                    className={[
-                      // ✅ mobile: make compare area BIG + readable
-                      "relative w-full flex-1 min-h-[55dvh] sm:min-h-0 rounded-md border bg-[var(--background)] overflow-hidden",
-                      // keep aspect hints for larger breakpoints if you want (optional)
-                      "sm:aspect-[4/3] lg:aspect-[3/4]",
-                      selectedStyle.border,
-                    ].join(" ")}
-                  >
-                    <img
-                      src={selected.after_url}
-                      className="absolute inset-0 w-full h-full object-contain"
-                      alt="After"
-                      draggable={false}
-                    />
-                    <img
-                      src={selected.before_url}
-                      className="absolute inset-0 w-full h-full object-contain"
-                      style={{ clipPath: `inset(0 ${100 - sliderVal}% 0 0)` }}
-                      alt="Before"
-                      draggable={false}
-                    />
-
-                    <div className="absolute top-3 left-3 text-[10px] px-2 py-1 rounded-sm border border-[var(--border)] bg-[var(--card)] text-[color:var(--color-text-tertiary,#9C9189)]">
-                      BEFORE
-                    </div>
-                    <div className="absolute top-3 right-3 text-[10px] px-2 py-1 rounded-sm border border-[var(--border)] bg-[var(--card)] text-[color:var(--color-text-tertiary,#9C9189)]">
-                      AFTER
-                    </div>
-
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-y-0 w-[2px] bg-white/70 shadow"
-                      style={{ left: `${sliderVal}%`, transform: "translateX(-50%)" }}
-                    />
-                  </div>
-
-                  <div className="mt-4 px-1 shrink-0">
-                    <Slider
-                      value={[sliderVal]}
-                      onValueChange={(v) => setSliderVal(v[0] ?? 50)}
-                      max={100}
-                      step={1}
-                      aria-label="Before / After comparison slider"
-                    />
-                    <div className="mt-1 flex justify-between text-[10px] text-[color:var(--color-text-tertiary,#9C9189)] select-none">
-                      <span>Before</span>
-                      <span>After</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ── Right: controls ────────────────────────────────── */}
-                <div
-                  className={[
-                    // ✅ mobile: limit panel height so compare stays large
-                    "overflow-y-auto max-h-[32dvh] lg:max-h-none",
-                    "lg:w-[300px] xl:w-[320px] shrink-0",
-                    "border-t lg:border-t-0 lg:border-l border-[var(--border)]",
-                    "bg-[var(--card)] p-4 lg:p-5 space-y-5",
-                  ].join(" ")}
-                >
-                  <div>
-                    <div className="text-xs font-semibold tracking-[0.14em] text-[color:var(--color-text-tertiary,#9C9189)]">
-                      STATUS
-                    </div>
-
-                    <RadioGroup
-                      value={localStatus}
-                      onValueChange={(value) => saveStatus(value, localNote)}
-                      className="mt-3 space-y-1"
-                    >
-                      {(
-                        [
-                          { value: "pending", id: "r-pending", label: "Pending" },
-                          { value: "approved", id: "r-approved", label: "Approve" },
-                          { value: "revision", id: "r-revision", label: "Revision needed" },
-                        ] as const
-                      ).map(({ value, id, label }) => {
-                        const s = statusStyles(value)
-                        const isActive = localStatus === value
-                        return (
-                          <div
-                            key={value}
-                            className={[
-                              "flex items-center gap-3 min-h-[44px] px-3 rounded-md border transition-colors",
-                              isActive
-                                ? `${s.chipBg} ${s.chipBorder}`
-                                : "border-transparent hover:bg-[var(--background)]",
-                            ].join(" ")}
-                          >
-                            <RadioGroupItem value={value} id={id} />
-                            <Label
-                              htmlFor={id}
-                              className={[
-                                "cursor-pointer font-medium text-sm select-none flex-1",
-                                isActive ? s.chipText : "",
-                              ].join(" ")}
-                            >
-                              {label}
-                            </Label>
-                            {isActive && (
-                              <span className="size-2 rounded-full shrink-0" style={{ background: s.dot }} aria-hidden="true" />
-                            )}
-                          </div>
-                        )
-                      })}
-                    </RadioGroup>
-                  </div>
-
-                  <div>
-                    <div className="text-xs font-semibold tracking-[0.14em] text-[color:var(--color-text-tertiary,#9C9189)]">
-                      NOTE
-                    </div>
-
-                    <Textarea
-                      className="mt-3 resize-none"
-                      placeholder="Describe what needs adjusting…"
-                      value={localNote}
-                      onChange={(e) => setLocalNote(e.target.value)}
-                      onBlur={() => saveStatus(localStatus, localNote)}
-                      maxLength={500}
-                      rows={4}
-                    />
-                    <div className="mt-1.5 flex justify-between text-[11px] text-[color:var(--color-text-tertiary,#9C9189)]">
-                      <span>{localNote.length}/500</span>
-                      {isSaving && (
-                        <span className="flex items-center gap-1">
-                          <Spinner className="size-3" />
-                          Saving…
+                  <Icon className="size-4 shrink-0" />
+                  {!sidebarCollapsed && (
+                    <>
+                      <span className="truncate">{item.label}</span>
+                      {item.badge !== null && (
+                        <span className="ml-auto rounded-sm bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                          {item.badge}
                         </span>
                       )}
-                    </div>
-                  </div>
+                    </>
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
+        </aside>
 
-                  <div className="pt-1">
-                    <Button
-                      disabled={isSaving}
-                      className="w-full min-h-[44px] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
-                      style={{
-                        background: isSaving ? "var(--border)" : "var(--accent)",
-                        color: "var(--accent-foreground)",
-                        opacity: isSaving ? 0.8 : 1,
-                      }}
-                      onClick={() => saveStatus(localStatus, localNote, { closeAfter: true })}
-                    >
-                      {isSaving ? (
-                        <>
-                          <Spinner className="size-4" />
-                          Saving…
-                        </>
-                      ) : (
-                        "Save & Close"
-                      )}
-                    </Button>
+        <div className="flex-1 min-w-0 h-screen flex flex-col overflow-hidden">
+          <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur h-24">
+            <div className="h-full px-4 md:px-6 py-3 space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Link href="/dashboard" className="hover:text-foreground">
+                  Pano
+                </Link>
+                <ChevronRight className="size-4" />
+                <Link href={`/projects/${projectId}`} className="hover:text-foreground">
+                  Proje
+                </Link>
+                <ChevronRight className="size-4" />
+                <span className="text-foreground">Batch {batchId.slice(0, 8)}</span>
+              </div>
 
-                    <div className="mt-2.5 hidden sm:block text-[11px] text-[color:var(--color-text-tertiary,#9C9189)]">
-                      Tip: Esc closes modal.
-                    </div>
-                  </div>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <h1 className="text-xl md:text-2xl font-semibold truncate">Batch İnceleme Alanı</h1>
+                  <Badge
+                    variant="outline"
+                    className={cn("shrink-0", batchStatus.chipBg, batchStatus.chipText, batchStatus.chipBorder)}
+                  >
+                    {batchStatus.label}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" className="border-border" onClick={() => window.print()}>
+                    <Download className="size-4" />
+                    <span className="hidden sm:inline">Toplu indir</span>
+                  </Button>
+                  <Button onClick={handleApproveAll} disabled={isApprovingAll || localImages.length === 0}>
+                    {isApprovingAll ? <Spinner className="size-4" /> : <CheckCheck className="size-4" />}
+                    <span className="hidden sm:inline">Hepsini onayla</span>
+                  </Button>
                 </div>
               </div>
-              {/* /body */}
+            </div>
+          </header>
+
+          <main className="flex-1 overflow-hidden p-4 md:p-6">
+            <div className="h-full flex flex-col gap-4 overflow-hidden">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                <Badge variant="outline" className="shrink-0 border-yellow-200 bg-yellow-100 text-yellow-700">
+                  Pending {counts.pending}
+                </Badge>
+                <Badge variant="outline" className="shrink-0 border-green-200 bg-green-100 text-green-700">
+                  Approved {counts.approved}
+                </Badge>
+                <Badge variant="outline" className="shrink-0 border-orange-200 bg-orange-100 text-orange-700">
+                  Revision {counts.revision}
+                </Badge>
+              </div>
+
+              <div className="flex-1 overflow-auto">
+                {isLoadingImages ? (
+                  <Card className="p-6 shadow-sm">
+                    <p className="text-sm text-muted-foreground">Görseller yükleniyor...</p>
+                  </Card>
+                ) : loadError ? (
+                  <Card className="p-6 shadow-sm">
+                    <p className="text-sm text-destructive">Supabase hatası: {loadError}</p>
+                  </Card>
+                ) : localImages.length === 0 ? (
+                  <Card className="p-6 shadow-sm">
+                    <p className="text-sm text-muted-foreground">Bu batch'te henüz görsel yok.</p>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {localImages.map((img) => {
+                      const s = statusStyles(img.status || "pending")
+                      const fname = prettyFilename(img)
+                      const isSelected = selected?.id === img.id
+
+                      return (
+                        <button
+                          key={img.id}
+                          type="button"
+                          onClick={() => setSelected(img)}
+                          className={cn(
+                            "group text-left rounded-md border bg-card shadow-sm transition-all hover:shadow-md min-h-[44px]",
+                            "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                            isSelected ? "border-primary ring-1 ring-primary/20" : s.border
+                          )}
+                        >
+                          <div className="relative aspect-[3/4] w-full bg-background overflow-hidden rounded-t-md">
+                            <img
+                              src={img.after_url}
+                              alt={fname}
+                              className="absolute inset-0 w-full h-full object-contain"
+                              loading="lazy"
+                              draggable={false}
+                            />
+
+                            <div
+                              className={cn(
+                                "absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-sm border",
+                                s.chipBg,
+                                s.chipText,
+                                s.chipBorder
+                              )}
+                            >
+                              {s.label}
+                            </div>
+                          </div>
+
+                          <div className="px-3 py-3 border-t border-border">
+                            <div className="text-[11px] font-mono text-muted-foreground truncate" title={fname}>
+                              {fname}
+                            </div>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+
+      {selected && isMdUp && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" onClick={() => setSelected(null)}>
+          <div className="h-full w-full flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="w-full max-w-[78vw] h-[85svh] max-h-[85svh] rounded-xl border border-border bg-background shadow-2xl overflow-hidden">
+              <div className="h-14 border-b border-border px-4 flex items-center justify-between">
+                <div className="min-w-0 flex items-center gap-2">
+                  <span className={"size-2 rounded-full shrink-0 " + selectedStyle.dotClass} aria-hidden="true" />
+                  <p className="text-sm font-medium truncate" title={prettyFilename(selected)}>
+                    {prettyFilename(selected)}
+                  </p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setSelected(null)}>
+                  <X className="size-4" />
+                </Button>
+              </div>
+              <div className="p-4 h-[calc(85svh-56px)] overflow-auto">
+                <DetailContent />
+              </div>
             </div>
           </div>
         </div>
       )}
-    </>
+
+      {selected && !isMdUp && (
+        <div className="fixed inset-0 z-50 bg-black/50" onClick={() => setSelected(null)}>
+          <div
+            className="absolute inset-x-0 top-0 h-[92svh] rounded-b-xl border-b border-border bg-background shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="h-14 border-b border-border px-4 flex items-center justify-between">
+              <div className="min-w-0 flex items-center gap-2">
+                <span className={"size-2 rounded-full shrink-0 " + selectedStyle.dotClass} aria-hidden="true" />
+                <p className="text-sm font-medium truncate" title={prettyFilename(selected)}>
+                  {prettyFilename(selected)}
+                </p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setSelected(null)}>
+                <X className="size-4" />
+              </Button>
+            </div>
+            <div className="p-3 h-[calc(92svh-56px)] overflow-auto">
+              <DetailContent mobile />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
