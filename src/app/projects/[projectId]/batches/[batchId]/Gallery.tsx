@@ -75,19 +75,19 @@ function statusStyles(status: string) {
       return {
         chipBg: "bg-green-100", chipText: "text-green-700",
         chipBorder: "border-green-200", border: "border-green-200",
-        label: "Approved", dotClass: "bg-green-600",
+        label: "Onaylandı", dotClass: "bg-green-600",
       }
     case "revision":
       return {
         chipBg: "bg-orange-100", chipText: "text-orange-700",
         chipBorder: "border-orange-200", border: "border-orange-200",
-        label: "Revision", dotClass: "bg-orange-600",
+        label: "Revizyon", dotClass: "bg-orange-600",
       }
     default:
       return {
         chipBg: "bg-yellow-100", chipText: "text-yellow-700",
         chipBorder: "border-yellow-200", border: "border-yellow-200",
-        label: "Pending", dotClass: "bg-yellow-500",
+        label: "Bekliyor", dotClass: "bg-yellow-500",
       }
   }
 }
@@ -505,7 +505,7 @@ export default function Gallery({ projectId, batchId }: { projectId: string; bat
                 {/* STATUS */}
                 <div>
                   <p className="text-xs font-semibold tracking-[0.14em] uppercase text-muted-foreground mb-3">
-                    Status
+                    Durum
                   </p>
                   <RadioGroup
                     value={localStatus}
@@ -513,9 +513,9 @@ export default function Gallery({ projectId, batchId }: { projectId: string; bat
                     className="space-y-1"
                   >
                     {([
-                      { value: "pending",  id: "r-pending",  label: "Pending"         },
+                      { value: "pending",  id: "r-pending",  label: "Bekliyor"        },
                       { value: "approved", id: "r-approved", label: "Onayla"          },
-                      { value: "revision", id: "r-revision", label: "Revision needed" },
+                      { value: "revision", id: "r-revision", label: "Revizyon Gerekli" },
                     ] as const).map(({ value, id, label }) => {
                       const s        = statusStyles(value)
                       const isActive = localStatus === value

@@ -141,7 +141,7 @@ export function BeforeAfterCompare({
         <img
           src={afterSrc}
           className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
-          alt="After"
+          alt="Sonra"
           draggable={false}
           onDragStart={(ev) => ev.preventDefault()}
         />
@@ -149,16 +149,16 @@ export function BeforeAfterCompare({
           src={beforeSrc}
           className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
           style={{ clipPath: `inset(0 ${100 - value}% 0 0)` }}
-          alt="Before"
+          alt="Önce"
           draggable={false}
           onDragStart={(ev) => ev.preventDefault()}
         />
 
         <div className="pointer-events-none absolute top-3 left-3 text-[10px] px-2 py-1 rounded-sm border border-border bg-card text-muted-foreground">
-          BEFORE
+          ÖNCE
         </div>
         <div className="pointer-events-none absolute top-3 right-3 text-[10px] px-2 py-1 rounded-sm border border-border bg-card text-muted-foreground">
-          AFTER
+          SONRA
         </div>
 
         <div
@@ -177,8 +177,8 @@ export function BeforeAfterCompare({
       <div className="px-1">
         <Slider value={[value]} onValueChange={(v) => onChange(v[0] ?? 0)} max={100} step={1} />
         <div className="mt-1 flex justify-between text-[10px] text-muted-foreground select-none">
-          <span>Before</span>
-          <span>After</span>
+          <span>Önce</span>
+          <span>Sonra</span>
         </div>
       </div>
     </div>
