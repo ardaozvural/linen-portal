@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import React, { useCallback, useRef } from "react"
 import { cn } from "@/lib/utils"
+import { Slider } from "@/components/ui/slider"
 
 type BeforeAfterCompareProps = {
   beforeSrc: string
@@ -11,6 +12,7 @@ type BeforeAfterCompareProps = {
   className?: string
   imageClassName?: string
   aspectClassName?: string
+  debug?: boolean
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -25,116 +27,131 @@ export function BeforeAfterCompare({
   className,
   imageClassName,
   aspectClassName = "aspect-[16/10]",
+  debug = false,
 }: BeforeAfterCompareProps) {
-  const rootRef = useRef<HTMLDivElement | null>(null)
   const imageRef = useRef<HTMLDivElement | null>(null)
-  const trackRef = useRef<HTMLDivElement | null>(null)
+
   const draggingRef = useRef(false)
-  const dragSourceRef = useRef<"image" | "track">("image")
-  const activePointerIdRef = useRef<number | null>(null)
+  const pointerIdRef = useRef<number | null>(null)
+  const prevOverflowRef = useRef<string | null>(null)
 
-  const updateFromClientX = (clientX: number, source: "image" | "track") => {
-    const rect =
-      source === "image"
-        ? imageRef.current?.getBoundingClientRect()
-        : trackRef.current?.getBoundingClientRect()
-    if (!rect) return
-    const next = ((clientX - rect.left) / rect.width) * 100
-    onChange(clamp(next, 0, 100))
+  const log = useCallback(
+    (...args: unknown[]) => {
+      if (debug) console.log("[Compare]", ...args)
+    },
+    [debug],
+  )
+
+  const lockScroll = () => {
+    if (typeof document === "undefined") return
+    if (prevOverflowRef.current != null) return
+    prevOverflowRef.current = document.documentElement.style.overflow
+    document.documentElement.style.overflow = "hidden"
   }
 
-  const endDrag = (pointerId?: number | null) => {
-    if (pointerId != null && rootRef.current?.hasPointerCapture(pointerId)) {
-      rootRef.current.releasePointerCapture(pointerId)
-    }
-    draggingRef.current = false
-    activePointerIdRef.current = null
+  const unlockScroll = () => {
+    if (typeof document === "undefined") return
+    if (prevOverflowRef.current == null) return
+    document.documentElement.style.overflow = prevOverflowRef.current
+    prevOverflowRef.current = null
   }
 
-  const onWindowPointerMove = (e: PointerEvent) => {
-    if (!draggingRef.current) return
-    if (activePointerIdRef.current !== null && e.pointerId !== activePointerIdRef.current) return
-    e.preventDefault()
-    updateFromClientX(e.clientX, dragSourceRef.current)
-  }
+  const updateFromClientX = useCallback(
+    (clientX: number) => {
+      const rect = imageRef.current?.getBoundingClientRect()
+      if (!rect || rect.width <= 0) return
+      const next = ((clientX - rect.left) / rect.width) * 100
+      onChange(clamp(next, 0, 100))
+    },
+    [onChange],
+  )
 
-  const onWindowPointerEnd = (e: PointerEvent) => {
-    if (activePointerIdRef.current !== null && e.pointerId !== activePointerIdRef.current) return
-    endDrag(activePointerIdRef.current)
-  }
-
-  const startDrag = (
-    e: React.PointerEvent<HTMLElement>,
-    source: "image" | "track",
-    captureTarget?: HTMLElement | null,
-  ) => {
+  const onImagePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return
     e.preventDefault()
     e.stopPropagation()
-    dragSourceRef.current = source
-    draggingRef.current = true
-    activePointerIdRef.current = e.pointerId
 
-    const captureEl = captureTarget ?? rootRef.current
-    if (captureEl && captureEl.setPointerCapture) {
-      captureEl.setPointerCapture(e.pointerId)
+    draggingRef.current = true
+    pointerIdRef.current = e.pointerId
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+      log("DOWN", { pointerId: e.pointerId, pointerType: e.pointerType, buttons: e.buttons })
+      log("capture set:", e.currentTarget.hasPointerCapture(e.pointerId))
+    } catch (err) {
+      log("setPointerCapture FAILED:", err)
     }
 
-    updateFromClientX(e.clientX, source)
+    lockScroll()
+    document.body.style.userSelect = "none"
+    updateFromClientX(e.clientX)
   }
 
-  useEffect(() => {
-    window.addEventListener("pointermove", onWindowPointerMove, { passive: false })
-    window.addEventListener("pointerup", onWindowPointerEnd)
-    window.addEventListener("pointercancel", onWindowPointerEnd)
-    return () => {
-      window.removeEventListener("pointermove", onWindowPointerMove)
-      window.removeEventListener("pointerup", onWindowPointerEnd)
-      window.removeEventListener("pointercancel", onWindowPointerEnd)
-      endDrag(activePointerIdRef.current)
+  const onImagePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return
+    if (pointerIdRef.current !== null && e.pointerId !== pointerIdRef.current) return
+    e.preventDefault()
+    updateFromClientX(e.clientX)
+  }
+
+  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (pointerIdRef.current !== null && e.pointerId !== pointerIdRef.current) return
+
+    draggingRef.current = false
+    pointerIdRef.current = null
+
+    document.body.style.userSelect = ""
+    unlockScroll()
+
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+        log("capture released")
+      }
+    } catch (err) {
+      log("releasePointerCapture FAILED:", err)
     }
-  }, [])
+  }
 
-  const onRootPointerDownCapture = (e: React.PointerEvent<HTMLDivElement>) => {
-    const path = e.nativeEvent.composedPath()
-    const sourceEl = path.find((node) => {
-      if (!(node instanceof HTMLElement)) return false
-      return node.dataset.compareSource != null
-    }) as HTMLElement | undefined
-
-    const sourceAttr = sourceEl?.dataset.compareSource
-    if (!sourceAttr) return
-
-    const source = sourceAttr === "track" ? "track" : "image"
-    startDrag(e, source, rootRef.current)
+  const onLostPointerCapture = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (pointerIdRef.current !== null && e.pointerId !== pointerIdRef.current) return
+    log("LOST CAPTURE — drag aborted", { pointerId: e.pointerId })
+    draggingRef.current = false
+    pointerIdRef.current = null
+    document.body.style.userSelect = ""
+    unlockScroll()
   }
 
   return (
-    <div ref={rootRef} className={cn("space-y-3", className)} onPointerDownCapture={onRootPointerDownCapture}>
+    <div className={cn("space-y-3 select-none touch-none", className)}>
+      {/* IMAGE COMPARE */}
       <div
         ref={imageRef}
         className={cn(
-          "relative rounded-md border bg-background overflow-hidden touch-none select-none pointer-events-auto cursor-ew-resize",
+          "relative rounded-md border bg-background overflow-hidden cursor-ew-resize",
           imageClassName,
           aspectClassName,
         )}
-        style={{ cursor: "ew-resize" }}
-        data-compare-source="image"
-        onPointerDown={(e) => startDrag(e, "image", e.currentTarget)}
+        onPointerDown={onImagePointerDown}
+        onPointerMove={onImagePointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onLostPointerCapture={onLostPointerCapture}
       >
         <img
           src={afterSrc}
-          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+          className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
           alt="After"
           draggable={false}
-          onDragStart={(e) => e.preventDefault()}
+          onDragStart={(ev) => ev.preventDefault()}
         />
         <img
           src={beforeSrc}
-          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+          className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
           style={{ clipPath: `inset(0 ${100 - value}% 0 0)` }}
           alt="Before"
           draggable={false}
-          onDragStart={(e) => e.preventDefault()}
+          onDragStart={(ev) => ev.preventDefault()}
         />
 
         <div className="pointer-events-none absolute top-3 left-3 text-[10px] px-2 py-1 rounded-sm border border-border bg-card text-muted-foreground">
@@ -149,34 +166,16 @@ export function BeforeAfterCompare({
           className="pointer-events-none absolute inset-y-0 w-[2px] bg-card/70 shadow"
           style={{ left: `${value}%`, transform: "translateX(-50%)" }}
         />
-
-        <button
-          type="button"
-          aria-label="Drag compare handle"
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 size-7 rounded-full border border-border bg-card shadow-sm touch-none pointer-events-auto"
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 -translate-y-1/2 -translate-x-1/2 size-7 rounded-full border border-border bg-card shadow-sm"
           style={{ left: `${value}%` }}
-          data-compare-source="image"
-          onPointerDown={(e) => startDrag(e, "image", e.currentTarget)}
         />
       </div>
 
+      {/* TRACK = SHADCN SLIDER (drag kesin) */}
       <div className="px-1">
-        <div
-          ref={trackRef}
-          className="relative h-2 rounded-full bg-border touch-none select-none pointer-events-auto"
-          data-compare-source="track"
-          onPointerDown={(e) => startDrag(e, "track", e.currentTarget)}
-        >
-          <div className="absolute inset-y-0 left-0 rounded-full bg-primary" style={{ width: `${value}%` }} />
-          <button
-            type="button"
-            aria-label="Drag track handle"
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 size-4 rounded-full border border-border bg-card shadow-sm touch-none pointer-events-auto"
-            style={{ left: `${value}%` }}
-            data-compare-source="track"
-            onPointerDown={(e) => startDrag(e, "track", e.currentTarget)}
-          />
-        </div>
+        <Slider value={[value]} onValueChange={(v) => onChange(v[0] ?? 0)} max={100} step={1} />
         <div className="mt-1 flex justify-between text-[10px] text-muted-foreground select-none">
           <span>Before</span>
           <span>After</span>
