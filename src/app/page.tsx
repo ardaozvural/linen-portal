@@ -23,20 +23,8 @@ export default function HomePage() {
   const canSubmit = useMemo(() => {
     return email.trim().length > 3 && password.length >= 6
   }, [email, password])
-
-  // Zaten login ise direkt batch listesine
-  useEffect(() => {
-    let active = true
-      ; (async () => {
-        const { data } = await supabase.auth.getSession()
-        if (!active) return
-        if (data.session) router.replace("/app/batches")
-      })()
-    return () => {
-      active = false
-    }
-  }, [router])
-
+  // Zaten login ise direkt batch listesine (AUTO-REDIRECT KAPALI)
+  // Not: Landing her zaman görünsün; Dashboard'a geçiş butonla yapılır.
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!canSubmit) return
