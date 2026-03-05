@@ -567,14 +567,15 @@ export default function Gallery({ projectId, batchId }: { projectId: string; bat
             {/* Modal body — 2 kolon, overflow-hidden */}
             <div className="flex-1 min-h-0 grid grid-cols-[1fr_300px] gap-4 p-4 overflow-hidden">
               {/* Sol: compare görsel — overflow YOK, drag güvenli alan */}
-              <div className="flex flex-col justify-center min-h-0">
+              <div className="flex flex-col min-h-0 h-full">
                 <BeforeAfterCompare
                   beforeSrc={selected.before_url}
                   afterSrc={selected.after_url}
                   value={sliderVal}
                   onChange={setSliderVal}
                   imageClassName={selectedStyle.border}
-                  aspectClassName="aspect-[3/4]"
+                  className="h-full flex flex-col"
+                  aspectClassName="flex-1 min-h-0"
                 />
               </div>
 
@@ -615,20 +616,21 @@ export default function Gallery({ projectId, batchId }: { projectId: string; bat
 
             {/* body — compare önce, scroll sadece aşağıda */}
             <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-              {/* Compare alanı — overflow YOK */}
-              <div className="shrink-0 p-3">
+              {/* Compare alanı — yükseklik sabit, görsel flex ile doldurur */}
+              <div className="h-[55svh] shrink-0 p-3 pb-0">
                 <BeforeAfterCompare
                   beforeSrc={selected.before_url}
                   afterSrc={selected.after_url}
                   value={sliderVal}
                   onChange={setSliderVal}
                   imageClassName={selectedStyle.border}
-                  aspectClassName="aspect-[4/3]"
+                  className="h-full flex flex-col"
+                  aspectClassName="flex-1 min-h-0"
                 />
               </div>
 
-              {/* Kontrol paneli — scroll edilebilir */}
-              <div className="flex-1 min-h-0 overflow-auto p-3 pt-0">
+              {/* Kontrol paneli — kalan alan, scroll edilebilir */}
+              <div className="flex-1 min-h-0 overflow-auto p-3 pt-2">
                 <ControlPanel />
               </div>
             </div>
